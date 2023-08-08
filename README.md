@@ -1,3 +1,36 @@
+### Решение
+
+Добавил создание подключений и пременных в код DAG'а, чтобы не создавать их руками через UI
+
+Запуск:   
+`docker-compose up airflow-init`  
+`docker-compose up`
+
+***
+
+Код DAG'a `airflow/dags/supermarket.py`
+
+Схема CORE слоя:  
+![core_store](./core_store.png)  
+
+Mart Витрина 1:  
+![Витрина 1](./mart_1.png)
+
+Mart Витрина 2:  
+![Витрина 1](./mart_2.png)
+
+Airflow connections:  
+![Airflow connections](./airflow_connections.png)  
+
+Airflow variables:  
+![Airflow variables](./airflow_variables.png)
+
+DAG graph:  
+![Airflow variables](./dag_graph.png)  
+
+***
+
+
 ### Задание ПРО
 - Создайте переменную (Admin->Variables), в которой пропишите путь к raw_data
 - Создайте connection (Admin->connections), в котором пропишите настройки соединения к БД raw_store
@@ -59,31 +92,6 @@
 Скриншот витрины mart_store
 Результат выполнения задания необходимо выложить в github/gitlab и указать ссылку на Ваш репозиторий (не забудьте — репозиторий должен быть публичным).
 
-***
-
-### Решение
-
-Запуск: `docker-compose up`
-
-Код DAG'a `airflow/dags/supermarket.py`
-
-Схема CORE слоя:  
-![core_store](./core_store.png)  
-
-Mart Витрина 1:  
-![Витрина 1](./mart_1.png)
-
-Mart Витрина 2:  
-![Витрина 1](./mart_2.png)
-
-Airflow connections:  
-![Airflow connections](./airflow_connections.png)  
-
-Airflow variables:  
-![Airflow variables](./airflow_variables.png)
-
-DAG graph:  
-![Airflow variables](./dag_graph.png)
 
 
 

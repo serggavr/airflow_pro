@@ -6,6 +6,8 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.hooks.base_hook import BaseHook
+from airflow import settings
+from airflow.models import Connection
 from airflow.models import Variable
 from datetime import datetime
 from airflow.utils.task_group import TaskGroup
@@ -19,15 +21,64 @@ import random
 ### Constants ###
 
 CSV_URL = 'https://raw.githubusercontent.com/serggavr/1t_airflow/main/raw_data/supermarket_1/data.csv'
-store_connection_params = BaseHook.get_connection('connection_store')
-raw_data_path = Variable.get('raw_data_path')
-raw_data_folder_name = Variable.get('raw_data_folder_name')
-raw_data_file_name = Variable.get('raw_data_file_name')
-raw_table_name = Variable.get('raw_table_name')
 
-raw_store_name = Variable.get('raw_store_name')
-core_store_name = Variable.get('core_store_name')
-mart_store_name = Variable.get('mart_store_name')
+###################################
+### Set Variables & Connections ###
+
+try:
+    store_connection_params = BaseHook.get_connection('connection_store')
+except:
+    conn = Connection(
+        conn_id='connection_store',
+        conn_type='postgres',
+        host='db',
+        login='postgres',
+        password='password',
+        schema='supermarket',
+        port=5432
+    )
+    session = settings.Session()
+    session.add(conn)
+    session.commit()
+
+    store_connection_params = BaseHook.get_connection('connection_store')
+
+
+try:
+    fs_connection_params = BaseHook.get_connection('filepath')
+except:
+    conn = Connection(
+        conn_id='filepath',
+        conn_type='fs',
+        extra='{"path":"/opt/airflow/"}'
+    )
+    session = settings.Session()
+    session.add(conn)
+    session.commit()
+
+    fs_connection_params = BaseHook.get_connection('filepath')
+
+
+Variable.setdefault(key='raw_data_path1', default='/opt/airflow/raw_data')
+Variable.setdefault(key='raw_data_folder_name1', default='supermarket_1')
+Variable.setdefault(key='raw_data_file_name1', default='supermarket_raw_data.csv')
+Variable.setdefault(key='raw_table_name1', default='supermarket_data')
+Variable.setdefault(key='raw_store_name1', default='raw_store')
+Variable.setdefault(key='core_store_name1', default='core_store')
+Variable.setdefault(key='mart_store_name1', default='mart_store')
+
+###################################
+### Get Variables & Connections ###
+
+# store_connection_params = BaseHook.get_connection('connection_store')
+raw_data_path = Variable.get('raw_data_path1')
+raw_data_folder_name = Variable.get('raw_data_folder_name1')
+raw_data_file_name = Variable.get('raw_data_file_name1')
+raw_table_name = Variable.get('raw_table_name1')
+
+raw_store_name = Variable.get('raw_store_name1')
+core_store_name = Variable.get('core_store_name1')
+mart_store_name = Variable.get('mart_store_name1')
 
 core_sql_query_create_table_segments = """
 CREATE TABLE IF NOT EXISTS core_store.segments (
@@ -388,6 +439,35 @@ INSERT INTO mart_store.sales_per_year_corporate_segment (year, corporate_sales)
 #################
 ### Functions ###
 
+# def create_connections():
+#     if BaseHook.get_connection('connection_store'):
+#         print('connection connection_store already exist')
+#     else:
+#         conn = Connection(
+#                 conn_id='connection_store',
+#                 conn_type='postgres',
+#                 host='db',
+#                 login='postgres',
+#                 password='password',
+#                 schema='supermarket',
+#                 port=5432
+#         )
+#         session = settings.Session()
+#         session.add(conn)
+#         session.commit()
+#
+#     if BaseHook.get_connection('filepath'):
+#         print('connection filepath already exist')
+#     else:
+#         conn = Connection(
+#                 conn_id='filepath',
+#                 conn_type='fs',
+#                 extra='{"path":"/opt/airflow/"}'
+#         )
+#         session = settings.Session()
+#         session.add(conn)
+#         session.commit()
+
 def fn_load_data_to_folder(path, folder, file):
     response = requests.get(CSV_URL)
     with open(f'{path}/{folder}/{file}', 'wb') as f:
@@ -516,6 +596,7 @@ with TaskGroup(group_id='group_fs', dag=my_dag) as group_fs:
     task_create_folder = BashOperator(
             task_id='create_folder',
             bash_command='mkdir -p {{ params.PATH }}/{{ params.FOLDER_NAME }};',
+            # bash_command='echo "created";',
             params={'PATH': raw_data_path,
                     'FOLDER_NAME': raw_data_folder_name},
             dag=my_dag
